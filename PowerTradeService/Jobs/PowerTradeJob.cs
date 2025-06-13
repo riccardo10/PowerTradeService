@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using FileHelpers;
+using CsvHelper;
 
 namespace PowerTradeService.Jobs
 {
@@ -36,12 +36,14 @@ namespace PowerTradeService.Jobs
                 var tradePeriods = powerTrades.SelectMany(p => p.Periods).Select(v => new PowerPeriod{ Period = v.Period, Volume = v.Volume});
                 var tradeVolumes = tradePeriods.GroupBy(p => p.Period).Select(g => new TradeVolume { LocalTime = GetTimeStamp(g.Key), Volume = g.Sum(v => v.Volume) });
 
-                //Write the trade volumes to a file.
+                //Write the trade volumes to a .csv file.
                 string basePath = _configuration["TradesFolder"]!.ToString();
-                FileHelpers.FileHelperEngine<TradeVolume> engine = new FileHelpers.FileHelperEngine<TradeVolume>();
-                string filePath = Path.Combine(basePath, $"PowerPosition_{DateTime.Now:yyyyMMdd_hHHmm}.csv");
+                string filePath = Path.Combine(basePath, $"PowerPosition_{DateTime.Now:yyyyMMdd_HHmm}.csv");
 
-                engine.WriteFile(filePath, tradeVolumes);
+                using var streamWriter = new StreamWriter(filePath);
+                using var csvWriter = new CsvWriter(streamWriter, System.Globalization.CultureInfo.InvariantCulture);
+                csvWriter.WriteRecords(tradeVolumes);
+                csvWriter.Flush();
             }
             else
             {
