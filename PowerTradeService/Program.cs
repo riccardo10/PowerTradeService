@@ -22,16 +22,21 @@ hostBuilder.Services.AddSerilog(logger: Log.Logger, dispose: true);
 hostBuilder.Services.AddTransient<PowerTradeJob>();
 hostBuilder.Services.AddTransient<IPowerService, PowerService>();
 
-hostBuilder.Services.AddQuartz(static q =>
+IConfigurationRoot configuration = hostBuilder.Configuration.SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json", optional: true, reloadOnChange: true).Build();
+
+hostBuilder.Services.AddQuartz(q =>
 {
     JobKey jobKey = new JobKey("PowerTradeJob", "PowerTradeGroup");
     q.AddJob<PowerTradeJob>(configure => configure.WithIdentity(jobKey));
-    
+
+    // Get the cron schedule from configuration.
+    string cronSchedule = configuration["HourlyCronScshedule"]! ?? "0 0 0-23 ? * 2-7"; // Default to run daily every hour from 00:00 to 23:00, Monday to Saturday.
     q.AddTrigger(configure => configure
                 .ForJob(jobKey)
                 .WithIdentity("PowerTradeJobTrigger", "PowerTradeGroup")
+                .WithCronSchedule(cronSchedule) // Run daily every hour from 00:00 to 23:00, Monday to Saturday.
                 .StartNow()
-                .EndAt(null)
+                //.EndAt(null)
                 );
 });
 
