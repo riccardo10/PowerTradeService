@@ -35,7 +35,7 @@ namespace PowerTradeService.Jobs
                 _logger?.LogInformation($"Power Trade (.Net) Service is now running at {TimeOnly.FromDateTime(DateTime.Now).ToString("HH:mm:ss")}.");
                 
                 var tradePeriods = powerTrades.SelectMany(p => p.Periods).Select(v => new PowerPeriod{ Period = v.Period, Volume = v.Volume});
-                var tradeVolumes = tradePeriods.GroupBy(p => p.Period).Select(g => new TradeVolume { LocalTime = GetTimeStamp(g.Key), Volume = g.Sum(v => v.Volume) });
+                var tradeVolumes = tradePeriods.GroupBy(p => p.Period).Select(g => new TradeVolume { LocalTime = GetLocalTime(g.Key), Volume = g.Sum(v => v.Volume) });
 
                 //Write the trade volumes to a .csv file.
                 string basePath = _configuration["TradesFolder"]!.ToString();
@@ -52,6 +52,8 @@ namespace PowerTradeService.Jobs
                 using CsvWriter csvWriter = new CsvWriter(streamWriter, System.Globalization.CultureInfo.InvariantCulture);
                 csvWriter.WriteRecords(tradeVolumes);
                 csvWriter.Flush();
+
+                _logger?.LogInformation($"Trade volumes for date {tradeDate:yyyy-MM-dd} have been written to {filePath}.");
             }
             else
             {
@@ -59,106 +61,38 @@ namespace PowerTradeService.Jobs
             }   
         }
 
-        private string GetTimeStamp(int Period)
+        private string GetLocalTime(int Period)
         {
-            if (Period == 1)
+            string localTime = Period switch
             {
-                return "23:00";
-            }
-            else if (Period == 2)
-            {
-                return "00:00";
-            }
-            else if (Period == 3)
-            {
-                return "01:00";
-            }
-            else if (Period == 4)
-            {
-                return "02:00";
-            }
-            else if (Period == 5)
-            {
-                return "03:00";
-            }
-            else if (Period == 6)
-            {
-                return "04:00";
-            }
-            else if (Period == 7)
-            {
-                return "05:00";
-            }
-            else if (Period == 8)
-            {
-                return "06:00";
-            }
-            else if (Period == 9)
-            {
-                return "07:00";
-            }
-            else if (Period == 10)
-            {
-                return "08:00";
-            }
-            else if (Period == 11)
-            {
-                return "09:00";
-            }
-            else if (Period == 12)
-            {
-                return "10:00";
-            }
-            else if (Period == 13)
-            {
-                return "11:00";
-            }
-            else if (Period == 14)
-            {
-                return "12:00";
-            }
-            else if (Period == 15)
-            {
-                return "13:00";
-            }
-            else if (Period == 16)
-            {
-                return "14:00";
-            }
-            else if (Period == 17)
-            {
-                return "15:00";
-            }
-            else if (Period == 18)
-            {
-                return "16:00";
-            }
-            else if (Period == 19)
-            {
-                return "17:00";
-            }
-            else if (Period == 20)
-            {
-                return "18:00";
-            }
-            else if (Period == 21)
-            {
-                return "19:00";
-            }
-            else if (Period == 22)
-            {
-                return "20:00";
-            }
-            else if (Period == 23)
-            {
-                return "21:00";
-            }
-            else if (Period == 24)
-            {
-                return "22:00";
-            }
+                1 => "23:00",
+                2 => "00:00",
+                3 => "01:00",
+                4 => "02:00",
+                5 => "03:00",
+                6 => "04:00",
+                7 => "05:00",
+                8 => "06:00",
+                9 => "07:00",
+               10 => "08:00",
+               11 => "09:00",
+               12 => "10:00",
+               13 => "11:00",
+               14 => "12:00",
+               15 => "13:00",
+               16 => "14:00",
+               17 => "15:00",
+               18 => "16:00",
+               19 => "17:00",
+               20 => "18:00",
+               21 => "19:00",
+               22 => "20:00",
+               23 => "21:00",
+               24 => "22:00",
+                _ => "N/A"
+            };
 
-            return String.Empty;
+            return localTime;
         }
     }
 }

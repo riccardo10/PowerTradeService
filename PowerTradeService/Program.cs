@@ -33,7 +33,7 @@ hostBuilder.Services.AddQuartz(q =>
     q.AddJob<PowerTradeJob>(configure => configure.WithIdentity(jobKey));
 
     // Get the cron schedule from configuration.
-    string cronSchedule = configuration["PerHourCronScshedule"]! ?? "0 0 0-23 ? * 2-7"; // Default to run daily every hour from 00:00 to 23:00, Monday to Saturday.
+    string cronSchedule = configuration["PerMinuteCronSchedule"]! ?? "0 0 0-23 ? * 2-7"; // Default to run daily every hour from 00:00 to 23:00, Monday to Saturday.
     q.AddTrigger(configure => configure
                 .ForJob(jobKey)
                 .WithIdentity("PowerTradeJobTrigger", "PowerTradeGroup")
