@@ -22,15 +22,18 @@ hostBuilder.Services.AddSerilog(logger: Log.Logger, dispose: true);
 hostBuilder.Services.AddTransient<PowerTradeJob>();
 hostBuilder.Services.AddTransient<IPowerService, PowerService>();
 
-IConfigurationRoot configuration = hostBuilder.Configuration.SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json", optional: true, reloadOnChange: true).Build();
-
+// Set up configuration to read from the appsettings.json file.
+IConfigurationRoot configuration = hostBuilder.Configuration
+                                              .SetBasePath(Environment.CurrentDirectory)
+                                              .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                                              .Build();
 hostBuilder.Services.AddQuartz(q =>
 {
     JobKey jobKey = new JobKey("PowerTradeJob", "PowerTradeGroup");
     q.AddJob<PowerTradeJob>(configure => configure.WithIdentity(jobKey));
 
     // Get the cron schedule from configuration.
-    string cronSchedule = configuration["HourlyCronScshedule"]! ?? "0 0 0-23 ? * 2-7"; // Default to run daily every hour from 00:00 to 23:00, Monday to Saturday.
+    string cronSchedule = configuration["PerHourCronScshedule"]! ?? "0 0 0-23 ? * 2-7"; // Default to run daily every hour from 00:00 to 23:00, Monday to Saturday.
     q.AddTrigger(configure => configure
                 .ForJob(jobKey)
                 .WithIdentity("PowerTradeJobTrigger", "PowerTradeGroup")
@@ -39,7 +42,7 @@ hostBuilder.Services.AddQuartz(q =>
                 //.EndAt(null)
                 );
 });
-
+ 
 hostBuilder.Services.AddQuartzHostedService(static q => 
 {
     q.WaitForJobsToComplete = true; // Wait for jobs to complete before shutting down
