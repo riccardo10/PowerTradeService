@@ -24,41 +24,50 @@ namespace PowerTradeService.Jobs
         }
         public async Task Execute(IJobExecutionContext context)
         {
-            // This method is called by the Quartz scheduler when the job is executed.
-            //DateTime tradeDate = DateTime.Today.AddDays(-1);
+            // This method is called by the Quartz.Net scheduler when the job is executed.
+            //DateTime tradeDate = new DateTime(2025, 6, 10); // Use a fixed trade date for testing purposes.
 
-            DateTime tradeDate = new DateTime(2025, 6, 10); // Use a fixed date for testing purposes
-            IEnumerable<PowerTrade> powerTrades = await _powerService.GetTradesAsync(date: tradeDate);
+            DateTime tradeDate = DateTime.Today.AddDays(-1);
 
-            if (powerTrades.Any())
+            try
             {
-                _logger?.LogInformation($"Power Trade (.Net) Service is now running at {TimeOnly.FromDateTime(DateTime.Now).ToString("HH:mm:ss")}.");
-                
-                var tradePeriods = powerTrades.SelectMany(p => p.Periods).Select(v => new PowerPeriod{ Period = v.Period, Volume = v.Volume});
-                var tradeVolumes = tradePeriods.GroupBy(p => p.Period).Select(g => new TradeVolume { LocalTime = GetLocalTime(g.Key), Volume = g.Sum(v => v.Volume) });
+                IEnumerable<PowerTrade> powerTrades = await _powerService.GetTradesAsync(date: tradeDate);
 
-                //Write the trade volumes to a .csv file.
-                string basePath = _configuration["TradesFolder"]!.ToString();
-
-                // Ensure the directory exists.
-                if (!Directory.Exists(basePath))
+                if (powerTrades.Any())
                 {
-                    Directory.CreateDirectory(basePath);
+                    _logger?.LogInformation($"Power Trade (.Net) Service is now running at {TimeOnly.FromDateTime(DateTime.Now).ToString("HH:mm:ss")}.");
+
+                    var tradePeriods = powerTrades.SelectMany(p => p.Periods).Select(v => new PowerPeriod { Period = v.Period, Volume = v.Volume });
+                    var tradeVolumes = tradePeriods.GroupBy(p => p.Period).Select(g => new TradeVolume { LocalTime = GetLocalTime(g.Key), Volume = g.Sum(v => v.Volume) });
+
+                    //Write the trade volumes to a .csv file.
+                    string basePath = _configuration["TradesFolder"]!.ToString();
+
+                    // Ensure the directory exists.
+                    if (!Directory.Exists(basePath))
+                    {
+                        Directory.CreateDirectory(basePath);
+                    }
+
+                    string filePath = Path.Combine(basePath, $"PowerPosition_{DateTime.Now:yyyyMMdd_HHmm}.csv");
+
+                    using StreamWriter streamWriter = new StreamWriter(filePath);
+                    using CsvWriter csvWriter = new CsvWriter(streamWriter, System.Globalization.CultureInfo.InvariantCulture);
+                    csvWriter.WriteRecords(tradeVolumes);
+                    csvWriter.Flush();
+
+                    _logger?.LogInformation($"Trade volumes for date {tradeDate:yyyy-MM-dd} have been written to {filePath}.");
                 }
-
-                string filePath = Path.Combine(basePath, $"PowerPosition_{DateTime.Now:yyyyMMdd_HHmm}.csv");
-
-                using StreamWriter streamWriter = new StreamWriter(filePath);
-                using CsvWriter csvWriter = new CsvWriter(streamWriter, System.Globalization.CultureInfo.InvariantCulture);
-                csvWriter.WriteRecords(tradeVolumes);
-                csvWriter.Flush();
-
-                _logger?.LogInformation($"Trade volumes for date {tradeDate:yyyy-MM-dd} have been written to {filePath}.");
+                else
+                {
+                    _logger?.LogWarning($"No trades found for date {tradeDate:yyyy-MM-dd}.");
+                }
             }
-            else
+            catch (Exception e)
             {
-                _logger?.LogWarning($"No trades found for date {tradeDate:yyyy-MM-dd}.");
-            }   
+                _logger?.LogError(e, $"An error occurred while executing the PowerTradeJob for trade date {tradeDate:yyyy-MM-dd}.");
+                _logger?.LogError($"Exception message: {e.Message}");
+            }
         }
 
         private string GetLocalTime(int Period)
