@@ -63,99 +63,99 @@ namespace PowerTradeService.Jobs
         {
             if (Period == 1)
             {
-                return "00:00";
+                return "23:00";
             }
             else if (Period == 2)
             {
-                return "01:00";
+                return "00:00";
             }
             else if (Period == 3)
             {
-                return "02:00";
+                return "01:00";
             }
             else if (Period == 4)
             {
-                return "03:00";
+                return "02:00";
             }
             else if (Period == 5)
             {
-                return "04:00";
+                return "03:00";
             }
             else if (Period == 6)
             {
-                return "05:00";
+                return "04:00";
             }
             else if (Period == 7)
             {
-                return "06:00";
+                return "05:00";
             }
             else if (Period == 8)
             {
-                return "07:00";
+                return "06:00";
             }
             else if (Period == 9)
             {
-                return "08:00";
+                return "07:00";
             }
             else if (Period == 10)
             {
-                return "09:00";
+                return "08:00";
             }
             else if (Period == 11)
             {
-                return "10:00";
+                return "09:00";
             }
             else if (Period == 12)
             {
-                return "11:00";
+                return "10:00";
             }
             else if (Period == 13)
             {
-                return "12:00";
+                return "11:00";
             }
             else if (Period == 14)
             {
-                return "13:00";
+                return "12:00";
             }
             else if (Period == 15)
             {
-                return "14:00";
+                return "13:00";
             }
             else if (Period == 16)
             {
-                return "15:00";
+                return "14:00";
             }
             else if (Period == 17)
             {
-                return "16:00";
+                return "15:00";
             }
             else if (Period == 18)
             {
-                return "17:00";
+                return "16:00";
             }
             else if (Period == 19)
             {
-                return "18:00";
+                return "17:00";
             }
             else if (Period == 20)
             {
-                return "19:00";
+                return "18:00";
             }
             else if (Period == 21)
             {
-                return "20:00";
+                return "19:00";
             }
             else if (Period == 22)
             {
-                return "21:00";
+                return "20:00";
             }
             else if (Period == 23)
             {
-                return "22:00";
+                return "21:00";
             }
             else if (Period == 24)
             {
-                return "23:00";
+                return "22:00";
             }
 
             return String.Empty;
